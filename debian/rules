@@ -1,0 +1,8 @@
+#!/usr/bin/make -f
+
+%:
+	dh $@
+
+get-index-xml:
+	rsync --progress -vzrltD --partial --stats \
+	    ftp.rfc-editor.org::rfcs/rfc-index.txt ::rfc-index.xml .

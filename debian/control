@@ -1,0 +1,16 @@
+Source:
+Maintainer: Thomas Koch <thomas@koch.ro>
+Section: text
+Priority: optional
+Standards-Version: 3.9.2
+
+Package:
+Architecture: all
+Recommends: 
+Suggests: w3-recs, doc-rfc,
+ emacs-goodies-el, qrfcview
+Description: tools to work with standards documents from IETF (RFC), W3C, OASIS et al
+ Collection of small tools to author, read, convert or process text documents from
+ different standardaization bodies (IETF, W3C, OASIS, OMG):
+ 
+  * rfc-index-xml2bibtex - create bibtex reference database for all RFCs

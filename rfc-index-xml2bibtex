@@ -1,0 +1,107 @@
+#!/usr/bin/perl
+# Convert the RFC Editor's XML RFC index into a BibTex format
+#
+# Copyright (c) 2005, Eric Rescorla <ekr@rtfm.com>
+#               2011, Thomas Koch <thomas@koch.ro>
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+#
+# Redistributions of source code must retain the above copyright notice, this
+# list of conditions and the following disclaimer.
+# Redistributions in binary form must reproduce the above copyright notice,
+# this list of conditions and the following disclaimer in the documentation
+# and/or other materials provided with the distribution.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+# DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+# OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+# downloaded from http://www.educatedguesswork.org/xml2bibtex
+
+# See: http://tools.ietf.org/id/draft-carpenter-rfc-citation-recs-01.txt
+# TODO:
+#  * option to add double curly braces around titles to have them capitalized
+#  * option to insert the RFC ISSN number: ISSN 2070-1721
+#  * output to STDOUT as default
+#  * option to format only one or a set of RFCs
+#  * option to add URLs
+#  * also add day of publication if specified
+#  * the above draft recommends to also include pages. should we?
+
+use strict;
+use warnings;
+
+my $file=$ARGV[0];
+my $output_file;
+my $rfc_entry;
+
+die("Input file must have a .xml extension") unless $file=~/(.*)\.xml$/;
+
+if($#ARGV==0){
+  $output_file="$1.bib";
+}
+elsif($#ARGV==1){
+  $output_file=$ARGV[1];
+}
+else{
+  &usage;
+}
+
+use XML::Simple qw(:strict);
+my $db=XMLin($file,forcearray=>[qw(rfc-entry author)],keyattr => [] );
+
+open(OUT,">$output_file")||die("Couldn't open output file $output_file for writing: $!");
+
+$rfc_entry=$db->{'rfc-entry'};
+
+foreach my $entry (@$rfc_entry){
+  my $rfc_id=$entry->{'doc-id'};
+  die("bad format") unless $rfc_id=~/^RFC0*(\d+)$/;
+  my $rfc_number=$1;
+  my $rfc_title=$entry->{'title'};
+  my $rfc_year=$entry->{'date'}->{'year'};
+  my $rfc_month=$entry->{'date'}->{'month'};
+  my $rfc_day=$entry->{'date'}->{'day'};
+
+  my @rfc_authors=();
+
+  foreach my $author (@{$entry->{'author'}}) {
+    push(@rfc_authors,$author->{'name'});
+  }
+  my $rfc_authors=join(" and ",@rfc_authors);
+
+print OUT <<FOO;
+\@techreport{$rfc_id,
+  AUTHOR = {$rfc_authors},
+  TITLE = {$rfc_title},
+  HOWPUBLISHED = {Internet Requests for Comments},
+  TYPE = "{RFC}",
+  NUMBER = {$rfc_number},
+  MONTH = {$rfc_month},
+  YEAR = {$rfc_year},
+  PUBLISHER = "{RFC Editor}",
+  INSTITUTION = "{RFC Editor}"
+}
+
+FOO
+
+}
+
+exit(0);
+
+sub usage {
+  print <<FOO;
+$0: convert the RFC Editor's XML RFC index into a BibTex format
+
+usage: xml2bibtex <input-file> [<output-file>]
+FOO
+}
+
