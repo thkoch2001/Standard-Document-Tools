@@ -9,6 +9,7 @@ Please help ( TODO_ ) to make this a useful collection!
 Tools included:
 
 * rfc-index-xml2bibtex: build bibtex database from IETF's rfc-index.xml file.
+* w3c-rfc-to-bibtex
 
 References and Bibtex
 =====================
